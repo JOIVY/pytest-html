@@ -275,41 +275,43 @@ class HTMLReport(object):
             """
             log = html.div(class_='log')
 
-            for run, logs in report.runs_logs.items():
-                run_error = report.runs_errors[run]
+            if hasattr(report, "runs_logs"):  # Only do this if there was at least 1 run
+                for run, logs in report.runs_logs.items():
+                    run_error = report.runs_errors[run]
 
-                if run_error:
-                    run_div = html.div(class_='run', count=run, success="false")
-                    self._append_run_error(div=run_div, run_error=run_error, run=run)
-                else:
-                    run_div = html.div(class_='run', count=run, success="true")
+                    if run_error:
+                        run_div = html.div(class_='run', count=run, success="false")
+                        self._append_run_error(div=run_div, run_error=run_error, run=run)
+                    else:
+                        run_div = html.div(class_='run', count=run, success="true")
 
-                for section in logs:
-                    header, content = map(escape, section)
-                    # run_div.append(' {0} '.format(header).center(80, '-'))
-                    # run_div.append(html.br())
-                    if "stderr" in header:
-                        continue
+                    for section in logs:
+                        header, content = map(escape, section)
+                        # run_div.append(' {0} '.format(header).center(80, '-'))
+                        # run_div.append(html.br())
+                        if "stderr" in header:
+                            continue
 
-                    # Separate test steps and format test steps (remove random /n, /s etc. chars)
-                    test_steps_unformatted = section[1].split("<split_marker>")
-                    test_steps = self._get_and_format_test_steps(test_steps_unformatted)
+                        # Separate test steps and format test steps
+                        # (remove random /n, /s etc. chars)
+                        test_steps_unformatted = section[1].split("<split_marker>")
+                        test_steps = self._get_and_format_test_steps(test_steps_unformatted)
 
-                    for test_step in test_steps:
-                        if ANSI:
-                            converter = Ansi2HTMLConverter(inline=False, escaped=False)
-                            test_step = converter.convert(test_step, full=False)
-                        step_name, step_log = test_step.split("<test_method_name>")
+                        for test_step in test_steps:
+                            if ANSI:
+                                converter = Ansi2HTMLConverter(inline=False, escaped=False)
+                                test_step = converter.convert(test_step, full=False)
+                            step_name, step_log = test_step.split("<test_method_name>")
 
-                        run_div.append(
-                            html.div(
-                                raw(step_log),
-                                class_="test_step",
-                                name=step_name
+                            run_div.append(
+                                html.div(
+                                    raw(step_log),
+                                    class_="test_step",
+                                    name=step_name
+                                )
                             )
-                        )
 
-                log.append(run_div)
+                    log.append(run_div)
 
             if len(log) == 0:
                 log = html.div(class_='empty log')
