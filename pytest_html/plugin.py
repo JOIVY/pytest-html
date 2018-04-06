@@ -15,7 +15,7 @@ import time
 import bisect
 import hashlib
 import warnings
-from re import search
+import re
 
 try:
     from ansi2html import Ansi2HTMLConverter, style
@@ -253,13 +253,20 @@ class HTMLReport(object):
             )
             div.append(html.br())
 
-        def _format_test_step(self, text):
-            # Need to user repr here because re.search would not work on long strings
-            # with new line (\n) characters
-            result = search(r"<beginning_of_test_step>(.*)<end_of_test_step>", repr(text))
-            if result:
-                # Add the new line characters back
-                return result.group(1).replace("\\n", "\n")
+        def _get_and_format_test_steps(self, test_steps):
+            """
+            Go through the list of steps (each step is pretty much a very long string).
+            Every step starts with <beginning_of_test_step> and ends with <end_of_test_step>
+            so filter out only these items.
+            """
+            test_steps_formatted = []
+            regex = re.compile("<beginning_of_test_step>(.*)<end_of_test_step>", flags=re.S)
+
+            for test_step in test_steps:
+                re_search = regex.search(test_step)
+                if re_search:
+                    test_steps_formatted.append(re_search.group(1))
+            return test_steps_formatted
 
         def append_log_html(self, report, additional_html):
             """
@@ -286,9 +293,7 @@ class HTMLReport(object):
 
                     # Separate test steps and format test steps (remove random /n, /s etc. chars)
                     test_steps_unformatted = section[1].split("<split_marker>")
-                    test_steps = [self._format_test_step(test_step_unformatted)
-                                  for test_step_unformatted in test_steps_unformatted]
-                    test_steps = [test_step for test_step in test_steps if test_step is not None]
+                    test_steps = self._get_and_format_test_steps(test_steps_unformatted)
 
                     for test_step in test_steps:
                         if ANSI:
