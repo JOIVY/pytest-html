@@ -15,6 +15,7 @@ import time
 import bisect
 import hashlib
 import warnings
+from re import search
 
 try:
     from ansi2html import Ansi2HTMLConverter, style
@@ -225,30 +226,85 @@ class HTMLReport(object):
                     target='_blank'))
                 self.links_html.append(' ')
 
-        def append_log_html(self, report, additional_html):
-            log = html.div(class_='log')
-            if report.longrepr:
-                for line in report.longreprtext.splitlines():
-                    separator = line.startswith('_ ' * 10)
-                    if separator:
-                        log.append(line[:80])
-                    else:
-                        exception = line.startswith("E   ")
-                        if exception:
-                            log.append(html.span(raw(escape(line)),
-                                                 class_='error'))
-                        else:
-                            log.append(raw(escape(line)))
-                    log.append(html.br())
+        def _append_run_error(self, div, run_error, run):
+            run_error_div = html.div(class_="run_error")
 
-            for section in report.sections:
-                header, content = map(escape, section)
-                log.append(' {0} '.format(header).center(80, '-'))
-                log.append(html.br())
-                if ANSI:
-                    converter = Ansi2HTMLConverter(inline=False, escaped=False)
-                    content = converter.convert(content, full=False)
-                log.append(raw(content))
+            run_error_div.append(
+                html.span(
+                    "Run {run} failed. See below for details\n\n".format(run=run),
+                    class_="error"
+                )
+            )
+
+            for line in run_error.splitlines():
+                separator = line.startswith('_ ' * 10)
+                if separator:
+                    run_error_div.append(line[:80])
+                else:
+                    exception = line.startswith("E   ")
+                    if exception:
+                        run_error_div.append(html.span(raw(escape(line)), class_='error'))
+                    else:
+                        run_error_div.append(raw(escape(line)))
+                run_error_div.append(html.br())
+
+            div.append(
+                run_error_div
+            )
+            div.append(html.br())
+
+        def _format_test_step(self, text):
+            # Need to user repr here because re.search would not work on long strings
+            # with new line (\n) characters
+            result = search(r"<beginning_of_test_step>(.*)<end_of_test_step>", repr(text))
+            if result:
+                # Add the new line characters back
+                return result.group(1).replace("\\n", "\n")
+
+        def append_log_html(self, report, additional_html):
+            """
+            This method has been modified from the original
+            and works only with pytest-rerunfailures plugin (which itself has also been modified)
+            """
+            log = html.div(class_='log')
+
+            for run, logs in report.runs_logs.items():
+                run_error = report.runs_errors[run]
+
+                if run_error:
+                    run_div = html.div(class_='run', count=run, success="false")
+                    self._append_run_error(div=run_div, run_error=run_error, run=run)
+                else:
+                    run_div = html.div(class_='run', count=run, success="true")
+
+                for section in logs:
+                    header, content = map(escape, section)
+                    # run_div.append(' {0} '.format(header).center(80, '-'))
+                    # run_div.append(html.br())
+                    if "stderr" in header:
+                        continue
+
+                    # Separate test steps and format test steps (remove random /n, /s etc. chars)
+                    test_steps_unformatted = section[1].split("<split_marker>")
+                    test_steps = [self._format_test_step(test_step_unformatted)
+                                  for test_step_unformatted in test_steps_unformatted]
+                    test_steps = [test_step for test_step in test_steps if test_step is not None]
+
+                    for test_step in test_steps:
+                        if ANSI:
+                            converter = Ansi2HTMLConverter(inline=False, escaped=False)
+                            test_step = converter.convert(test_step, full=False)
+                        step_name, step_log = test_step.split("<test_method_name>")
+
+                        run_div.append(
+                            html.div(
+                                raw(step_log),
+                                class_="test_step",
+                                name=step_name
+                            )
+                        )
+
+                log.append(run_div)
 
             if len(log) == 0:
                 log = html.div(class_='empty log')
