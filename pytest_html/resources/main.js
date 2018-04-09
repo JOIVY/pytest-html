@@ -114,7 +114,51 @@ function init () {
                               }, false)
     });
 
+
+    run_show_hide();
 };
+
+function run_show_hide() {
+    run([{
+        tab: 'run_label',
+        body: 'run_content'
+    },{
+        tab: 'test_step_label',
+        body: 'test_step_content'
+    }]);
+
+    function run(classList) {
+        for (const itemConfig of classList) {
+            const result = document.querySelectorAll('.' + itemConfig.tab);
+            for (const item of result) {
+                run_show_hide_item(item, itemConfig.body);
+            }
+        }
+    }
+
+    function run_show_hide_item(tab, bodyClass) {
+        for (const childItem of tab.parentNode.children) {
+            if (childItem.classList.contains(bodyClass)) {
+                run_show_hide(tab, childItem);
+            }
+        }
+    }
+
+    function run_show_hide(tab, body) {
+        let isVisible = body.style.display !== 'none';
+        tab.style.cursor = 'pointer';
+
+        tab.addEventListener('click', function() {
+            if (isVisible === true) {
+                isVisible = false;
+                body.style.display = 'none';
+            } else {
+                isVisible = true;
+                body.style.display = '';
+            }
+        }, false);
+    }
+}
 
 function sort_table(clicked, key_func) {
     var rows = find_all('.results-table-row');

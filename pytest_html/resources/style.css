@@ -4,12 +4,6 @@ body {
 	min-width: 1200px;
 	color: #999;
 }
-
-h1 {
-	font-size: 24px;
-	color: black;
-}
-
 h2 {
 	font-size: 16px;
 	color: black;
@@ -100,6 +94,41 @@ span.error, span.failed, span.xpassed, .error .col-result, .failed .col-result, 
 	overflow-y: scroll;
 	padding: 5px;
 	white-space: pre-wrap
+}
+.run_main[success='true'] {
+    border: 2px solid green;
+    border-radius: 5px;
+    padding-left: 20px;
+}
+.run_main[success='false'] {
+    border: 2px solid red;
+    border-radius: 5px;
+    padding-left: 20px;
+}
+.run_label {
+    font-size: 1rem;
+}
+.test_step_main {
+    font-size: 1rem;
+    display: table;
+}
+.test_step_label {
+    border-bottom: 2px solid #86868a;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+.test_step_content {
+    border-bottom: 2px solid #86868a;
+    font-size: 0.8rem;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    padding-left: 20px;
+    margin-bottom: 10px;
+}
+.run_error {
+    border-left: 1px solid red;
+    padding-left: 20px;
+    font-size: 0.8rem;
 }
 div.image {
 	border: 1px solid #e6e6e6;

@@ -226,15 +226,8 @@ class HTMLReport(object):
                     target='_blank'))
                 self.links_html.append(' ')
 
-        def _append_run_error(self, div, run_error, run):
+        def _append_run_error(self, div, run_error):
             run_error_div = html.div(class_="run_error")
-
-            run_error_div.append(
-                html.span(
-                    "Run {run} failed. See below for details\n\n".format(run=run),
-                    class_="error"
-                )
-            )
 
             for line in run_error.splitlines():
                 separator = line.startswith('_ ' * 10)
@@ -277,13 +270,39 @@ class HTMLReport(object):
 
             if hasattr(report, "runs_logs"):  # Only do this if there was at least 1 run
                 for run, logs in report.runs_logs.items():
+                    # Get run error
                     run_error = report.runs_errors[run]
-
+                    # Create run main div
+                    run_div_main = html.div(
+                        class_="run_main",
+                        count=run
+                    )
+                    # Create run show/hide div
+                    run_div_label = html.div(
+                        "Run {run}".format(run=run),
+                        class_="run_label",
+                        count=run
+                    )
+                    # Create run content div
+                    run_div_content = html.div(
+                        class_="run_content",
+                        count=run
+                    )
+                    # If only more than one run collapse the run divs
+                    if len(report.runs_logs) > 1:
+                        run_div_content.attr.__setattr__("style", "display:none")
+                    # Add success attribute
                     if run_error:
-                        run_div = html.div(class_='run', count=run, success="false")
-                        self._append_run_error(div=run_div, run_error=run_error, run=run)
+                        run_div_label.append(" failed (show/hide details)")
+                        run_div_label.attr.__setattr__("success", "false")
+                        run_div_content.attr.__setattr__("success", "false")
+                        run_div_main.attr.__setattr__("success", "false")
+                        self._append_run_error(run_div_content, run_error=run_error)
                     else:
-                        run_div = html.div(class_='run', count=run, success="true")
+                        run_div_label.append(" passed (show/hide details)")
+                        run_div_label.attr.__setattr__("success", "true")
+                        run_div_content.attr.__setattr__("success", "true")
+                        run_div_main.attr.__setattr__("success", "true")
 
                     for section in logs:
                         header, content = map(escape, section)
@@ -303,15 +322,33 @@ class HTMLReport(object):
                                 test_step = converter.convert(test_step, full=False)
                             step_name, step_log = test_step.split("<test_method_name>")
 
-                            run_div.append(
-                                html.div(
-                                    raw(step_log),
-                                    class_="test_step",
-                                    name=step_name
-                                )
+                            # Create test step main div
+                            test_step_div_main = html.div(
+                                class_="test_step_main"
+                            )
+                            # Create test step show/hide div
+                            test_step_div_label = html.div(
+                                step_name,
+                                class_="test_step_label",
+                                name=step_name
+                            )
+                            # Create test step content div
+                            test_step_div_content = html.div(
+                                raw(step_log),
+                                class_="test_step_content",
+                                name=step_name,
+                                style="display:none"
                             )
 
-                    log.append(run_div)
+                            test_step_div_main.append(test_step_div_label)
+                            test_step_div_main.append(test_step_div_content)
+
+                            run_div_content.append(test_step_div_main)
+
+                    run_div_main.append(run_div_label)
+                    run_div_main.append(run_div_content)
+
+                    log.append(run_div_main)
 
             if len(log) == 0:
                 log = html.div(class_='empty log')
