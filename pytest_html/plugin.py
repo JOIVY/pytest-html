@@ -286,13 +286,17 @@ class HTMLReport(object):
                 run_content_div.attr.__setattr__("style", "display:none")
             # Add success attribute
             if run_error:
-                run_label_div.append(" failed (show/hide details)")
+                run_label_div.append(
+                    html.span(" failed (show/hide details)", class_="hint")
+                )
                 run_label_div.attr.__setattr__("success", "false")
                 run_content_div.attr.__setattr__("success", "false")
                 run_main_div.attr.__setattr__("success", "false")
                 self._append_run_error(run_content_div, run_error=run_error)
             else:
-                run_label_div.append(" passed (show/hide details)")
+                run_label_div.append(
+                    html.span(" passed (show/hide details)", class_="hint")
+                )
                 run_label_div.attr.__setattr__("success", "true")
                 run_content_div.attr.__setattr__("success", "true")
                 run_main_div.attr.__setattr__("success", "true")
@@ -362,8 +366,8 @@ class HTMLReport(object):
                     test_steps_table = html.table(class_="steps_table")
                     test_steps_table.append(
                         html.th(
-                            "Step name",
-                            html.span(" (click step to expand/collapse)", class_="hint"),
+                            "Action name",
+                            html.span(" (click action to expand/collapse)", class_="hint"),
                             class_="step_name"
                         )
                     )

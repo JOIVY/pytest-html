@@ -150,7 +150,7 @@ span.error, span.failed, span.xpassed, .error .col-result, .failed .col-result, 
 .steps_table {
     margin-top: 15px;
     background-color: #ececec;
-    font-size: 1.3rem;
+    font-size: 1rem;
 }
 .steps_table_tr {
     font-size: 1rem;
@@ -158,7 +158,7 @@ span.error, span.failed, span.xpassed, .error .col-result, .failed .col-result, 
 .hint {
     font-weight: normal;
     color: #8e8e8e;
-    font-size: 1rem;
+    font-size: 0.8rem;
 }
 div.image {
 	border: 1px solid #e6e6e6;
