@@ -272,7 +272,11 @@ class HTMLReport(object):
             )
             # Create run label div
             run_label_div = html.div(
-                "Run {run}".format(run=run),
+                "Run {run} {pass_or_fail}".format(
+                    run=run,
+                    pass_or_fail="failed" if run_error else "passed"
+                ),
+                html.span(" (show/hide details)", class_="hint"),
                 class_="run_label",
                 count=run
             )
@@ -286,17 +290,11 @@ class HTMLReport(object):
                 run_content_div.attr.__setattr__("style", "display:none")
             # Add success attribute
             if run_error:
-                run_label_div.append(
-                    html.span(" failed (show/hide details)", class_="hint")
-                )
                 run_label_div.attr.__setattr__("success", "false")
                 run_content_div.attr.__setattr__("success", "false")
                 run_main_div.attr.__setattr__("success", "false")
                 self._append_run_error(run_content_div, run_error=run_error)
             else:
-                run_label_div.append(
-                    html.span(" passed (show/hide details)", class_="hint")
-                )
                 run_label_div.attr.__setattr__("success", "true")
                 run_content_div.attr.__setattr__("success", "true")
                 run_main_div.attr.__setattr__("success", "true")
