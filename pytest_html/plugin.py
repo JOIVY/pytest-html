@@ -281,8 +281,8 @@ class HTMLReport(object):
                 class_="run_content",
                 count=run
             )
-            # If only more than one run collapse the run divs
-            if single_run:
+            # If more than one run collapse the run divs
+            if not single_run:
                 run_content_div.attr.__setattr__("style", "display:none")
             # Add success attribute
             if run_error:
@@ -320,6 +320,23 @@ class HTMLReport(object):
 
             return test_step_main_div, test_step_label_div, test_step_content_div
 
+        def _get_and_format_step_logs(self, test_step):
+            re_search = re.search(
+                "<beginning_of_step_name>(.*)<end_of_step_name>"
+                "<beginning_of_user_id>(.*)<end_of_user_id>"
+                "<beginning_of_status_code>(.*)<end_of_status_code>",
+                test_step,
+                flags=re.S
+            )
+
+            _, step_log = test_step.split("<step_log>")
+
+            step_name = re_search.group(1)
+            user_id = re_search.group(2)
+            status_code = re_search.group(3)
+
+            return step_name, user_id, status_code, step_log
+
         def append_log_html(self, report, additional_html):
             """
             This method has been modified from the original
@@ -341,6 +358,21 @@ class HTMLReport(object):
                         run_error=run_error,
                         single_run=True if len(report.runs_logs) == 1 else False
                     )
+                    # Create test steps table
+                    test_steps_table = html.table(class_="steps_table")
+                    test_steps_table.append(
+                        html.th(
+                            "Step name",
+                            html.span(" (click step to expand/collapse)", class_="hint"),
+                            class_="step_name"
+                        )
+                    )
+                    test_steps_table.append(html.th("User id", class_="step_user_id"))
+                    test_steps_table.append(
+                        html.th("Status code", class_="step_status_code")
+                    )
+                    test_steps_tbody = html.tbody(class_="steps_table_tbody")
+                    test_steps_table.append(test_steps_tbody)
 
                     for section in logs:
                         header, content = map(escape, section)
@@ -358,7 +390,9 @@ class HTMLReport(object):
                             if ANSI:
                                 converter = Ansi2HTMLConverter(inline=False, escaped=False)
                                 test_step = converter.convert(test_step, full=False)
-                            step_name, step_log = test_step.split("<test_method_name>")
+                            step_name, user_id, status_code, step_log = (
+                                self._get_and_format_step_logs(test_step)
+                            )
 
                             test_step_main_div, test_step_label_div, test_step_content_div = (
                                 self._create_test_step_divs(
@@ -370,7 +404,22 @@ class HTMLReport(object):
                             test_step_main_div.append(test_step_label_div)
                             test_step_main_div.append(test_step_content_div)
 
-                            run_content_div.append(test_step_main_div)
+                            test_steps_tr = html.tr(class_="steps_table_tr")
+                            test_steps_tr.append(
+                                html.td(test_step_main_div, class_="tr_step_name")
+                            )
+                            test_steps_tr.append(
+                                html.td(raw(user_id), class_="tr_step_user_id")
+                            )
+                            test_steps_tr.append(
+                                html.td(raw(status_code), class_="tr_step_status_code")
+                            )
+
+                            test_steps_tbody.append(test_steps_tr)
+
+                            # run_content_div.append(test_step_main_div)
+
+                    run_content_div.append(test_steps_table)
 
                     run_main_div.append(run_label_div)
                     run_main_div.append(run_content_div)
