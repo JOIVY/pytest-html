@@ -112,9 +112,6 @@ span.error, span.failed, span.xpassed, .error .col-result, .failed .col-result, 
 .run_label {
     font-size: 1rem;
 }
-.test_step_label {
-    // font-weight: bold;
-}
 .test_step_content {
     font-size: 0.8rem;
     white-space: pre-wrap;
@@ -122,6 +119,7 @@ span.error, span.failed, span.xpassed, .error .col-result, .failed .col-result, 
     word-wrap: break-word;
     margin-top: 15px;
     margin-bottom: 15px;
+    margin-left: 25px;
 }
 .run_error {
     border-left: 1px solid red;
@@ -137,7 +135,7 @@ span.error, span.failed, span.xpassed, .error .col-result, .failed .col-result, 
     vertical-align: top;
 }
 .tr_step_name {
-    width: 1500px;
+    width: 1525px;
 }
 #results-table .tr_step_name, #results-table .tr_step_user_id,
 #results-table .tr_step_status_code, #results-table .step_name,
