@@ -235,6 +235,7 @@ class HTMLReport(object):
                     exception = line.startswith("E   ")
                     if exception:
                         div.append(html.span(raw(escape(line)), class_='error'))
+                        div.append(html.br())
                     else:
                         div.append(raw(escape(line)))
                         div.append(html.br())
