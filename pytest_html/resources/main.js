@@ -125,6 +125,9 @@ function run_show_hide() {
     },{
         tab: 'test_step_label',
         body: 'test_step_content'
+    },{
+        tab: 'request_headers_label',
+        body: 'request_headers_content'
     }]);
 
     function run(classList) {

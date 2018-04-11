@@ -113,9 +113,11 @@ span.error, span.failed, span.xpassed, .error .col-result, .failed .col-result, 
     font-size: 1rem;
 }
 .test_step_content {
+    width: 1200px;
+}
+.test_step_content, .request_headers_content{
     font-size: 0.8rem;
     white-space: pre-wrap;
-    width: 1500px;
     word-wrap: break-word;
     margin-top: 15px;
     margin-bottom: 15px;
@@ -131,15 +133,22 @@ span.error, span.failed, span.xpassed, .error .col-result, .failed .col-result, 
     white-space: pre-wrap;
     background-color: #ececec;
 }
-.tr_step_name, .tr_step_user_id, .tr_step_status_code {
+.tr_step_name, .tr_step_user_id, .tr_step_status_code, .tr_step_request_headers {
     vertical-align: top;
 }
 .tr_step_name {
-    width: 1525px;
+    width: 1225px;
+}
+.tr_step_request_headers {
+    width: 325px;
+}
+.request_headers_content {
+    width: 300px;
 }
 #results-table .tr_step_name, #results-table .tr_step_user_id,
 #results-table .tr_step_status_code, #results-table .step_name,
-#results-table .step_user_id, #results-table .step_status_code {
+#results-table .step_user_id, #results-table .step_status_code,
+#results-table .step_request_headers, #results-table .tr_step_request_headers {
     border: 1px solid #a2a2a2;
 }
 .tr_step_user_id {

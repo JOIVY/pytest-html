@@ -19,6 +19,7 @@ import re
 
 try:
     from ansi2html import Ansi2HTMLConverter, style
+
     ANSI = True
 except ImportError:
     # ansi2html is not installed
@@ -52,10 +53,10 @@ def pytest_addoption(parser):
                     help='create html report file at given path.')
     group.addoption('--self-contained-html', action='store_true',
                     help='create a self-contained html file containing all '
-                    'necessary styles, scripts, and images - this means '
-                    'that the report may not render or function where CSP '
-                    'restrictions are in place (see '
-                    'https://developer.mozilla.org/docs/Web/Security/CSP)')
+                         'necessary styles, scripts, and images - this means '
+                         'that the report may not render or function where CSP '
+                         'restrictions are in place (see '
+                         'https://developer.mozilla.org/docs/Web/Security/CSP)')
 
 
 def pytest_configure(config):
@@ -79,7 +80,6 @@ def data_uri(content, mime_type='text/plain', charset='utf-8'):
 
 
 class HTMLReport(object):
-
     def __init__(self, logfile, config):
         logfile = os.path.expanduser(os.path.expandvars(logfile))
         self.logfile = os.path.abspath(logfile)
@@ -130,7 +130,7 @@ class HTMLReport(object):
             if len(cells) > 0:
                 self.row_table = html.tr(cells)
                 self.row_extra = html.tr(html.td(self.additional_html,
-                                         class_='extra', colspan=len(cells)))
+                                                 class_='extra', colspan=len(cells)))
 
         def __lt__(self, other):
             order = ('Error', 'Failed', 'Rerun', 'XFailed',
@@ -140,7 +140,7 @@ class HTMLReport(object):
         def create_asset(self, content, extra_index,
                          test_index, file_extension, mode='w'):
             hash_key = ''.join([self.test_id, str(extra_index),
-                               str(test_index)]).encode('utf-8')
+                                str(test_index)]).encode('utf-8')
             hash_generator = hashlib.md5()
             hash_generator.update(hash_key)
             asset_file_name = '{0}.{1}'.format(hash_generator.hexdigest(),
@@ -192,7 +192,7 @@ class HTMLReport(object):
 
             elif extra.get('format') == extras.FORMAT_HTML:
                 self.additional_html.append(html.div(
-                                            raw(extra.get('content'))))
+                    raw(extra.get('content'))))
 
             elif extra.get('format') == extras.FORMAT_JSON:
                 content = json.dumps(extra.get('content'))
@@ -265,6 +265,32 @@ class HTMLReport(object):
                     test_steps_formatted.append(re_search.group(1))
             return test_steps_formatted
 
+        def _create_test_steps_table(self):
+            # Create test steps table
+            test_steps_table = html.table(class_="steps_table")
+
+            test_steps_table.append(
+                html.th(
+                    "Action name",
+                    html.span(" (click action to expand/collapse)", class_="hint"),
+                    class_="step_name"
+                )
+            )
+            test_steps_table.append(
+                html.th("User id", class_="step_user_id")
+            )
+            test_steps_table.append(
+                html.th("Status code", class_="step_status_code")
+            )
+            test_steps_table.append(
+                html.th("Request headers", class_="step_request_headers")
+            )
+
+            test_steps_tbody = html.tbody(class_="steps_table_tbody")
+            test_steps_table.append(test_steps_tbody)
+
+            return test_steps_table, test_steps_tbody
+
         def _create_run_divs(self, run, run_error, single_run):
             # Create run main div
             run_main_div = html.div(
@@ -300,7 +326,10 @@ class HTMLReport(object):
                 run_content_div.attr.__setattr__("success", "true")
                 run_main_div.attr.__setattr__("success", "true")
 
-            return run_main_div, run_label_div, run_content_div
+            run_main_div.append(run_label_div)
+            run_main_div.append(run_content_div)
+
+            return run_main_div, run_content_div
 
         def _create_test_step_divs(self, step_name, step_log):
             # Create test step main div
@@ -321,13 +350,58 @@ class HTMLReport(object):
                 style="display:none"
             )
 
-            return test_step_main_div, test_step_label_div, test_step_content_div
+            test_step_main_div.append(test_step_label_div)
+            test_step_main_div.append(test_step_content_div)
+
+            return test_step_main_div
+
+        def _create_request_headers_divs(self, request_headers):
+            # Create request headers main div
+            request_headers_main_div = html.div(
+                class_="request_headers_main"
+            )
+            # Create request headers show/hide div
+            request_headers_label_div = html.div(
+                html.span("show/hide headers", class_="hint"),
+                class_="request_headers_label"
+            )
+            # Create request headers content div
+            request_headers_content_div = html.div(
+                raw(request_headers),
+                class_="request_headers_content",
+                style="display:none"
+            )
+
+            request_headers_main_div.append(request_headers_label_div)
+            request_headers_main_div.append(request_headers_content_div)
+
+            return request_headers_main_div
+
+        def _create_test_steps_tr(self, test_step_main_div, user_id,
+                                  status_code, request_headers_main_div):
+            test_steps_tr = html.tr(class_="steps_table_tr")
+
+            test_steps_tr.append(
+                html.td(test_step_main_div, class_="tr_step_name")
+            )
+            test_steps_tr.append(
+                html.td(raw(user_id), class_="tr_step_user_id")
+            )
+            test_steps_tr.append(
+                html.td(raw(status_code), class_="tr_step_status_code")
+            )
+            test_steps_tr.append(
+                html.td(request_headers_main_div, class_="tr_step_request_headers")
+            )
+
+            return test_steps_tr
 
         def _get_and_format_step_logs(self, test_step):
             re_search = re.search(
                 "<beginning_of_step_name>(.*)<end_of_step_name>"
                 "<beginning_of_user_id>(.*)<end_of_user_id>"
-                "<beginning_of_status_code>(.*)<end_of_status_code>",
+                "<beginning_of_status_code>(.*)<end_of_status_code>"
+                "<beginning_of_request_headers>(.*)<end_of_request_headers>",
                 test_step,
                 flags=re.S
             )
@@ -337,8 +411,9 @@ class HTMLReport(object):
             step_name = re_search.group(1)
             user_id = re_search.group(2)
             status_code = re_search.group(3)
+            request_headers = re_search.group(4)
 
-            return step_name, user_id, status_code, step_log
+            return step_name, user_id, status_code, request_headers, step_log
 
         def append_log_html(self, report, additional_html):
             """
@@ -356,26 +431,13 @@ class HTMLReport(object):
                     # Get run error
                     run_error = report.runs_errors[run]
                     # Create run main, label and content divs
-                    run_main_div, run_label_div, run_content_div = self._create_run_divs(
+                    run_main_div, run_content_div = self._create_run_divs(
                         run=run,
                         run_error=run_error,
                         single_run=True if len(report.runs_logs) == 1 else False
                     )
                     # Create test steps table
-                    test_steps_table = html.table(class_="steps_table")
-                    test_steps_table.append(
-                        html.th(
-                            "Action name",
-                            html.span(" (click action to expand/collapse)", class_="hint"),
-                            class_="step_name"
-                        )
-                    )
-                    test_steps_table.append(html.th("User id", class_="step_user_id"))
-                    test_steps_table.append(
-                        html.th("Status code", class_="step_status_code")
-                    )
-                    test_steps_tbody = html.tbody(class_="steps_table_tbody")
-                    test_steps_table.append(test_steps_tbody)
+                    test_steps_table, test_steps_tbody = self._create_test_steps_table()
 
                     for section in logs:
                         header, content = map(escape, section)
@@ -393,39 +455,34 @@ class HTMLReport(object):
                             if ANSI:
                                 converter = Ansi2HTMLConverter(inline=False, escaped=False)
                                 test_step = converter.convert(test_step, full=False)
-                            step_name, user_id, status_code, step_log = (
+                            step_name, user_id, status_code, request_headers, step_log = (
                                 self._get_and_format_step_logs(test_step)
                             )
 
-                            test_step_main_div, test_step_label_div, test_step_content_div = (
-                                self._create_test_step_divs(
-                                    step_name=step_name,
-                                    step_log=step_log
-                                )
+                            # Create test step main div (containing test log)
+                            test_step_main_div = self._create_test_step_divs(
+                                step_name=step_name,
+                                step_log=step_log
                             )
 
-                            test_step_main_div.append(test_step_label_div)
-                            test_step_main_div.append(test_step_content_div)
-
-                            test_steps_tr = html.tr(class_="steps_table_tr")
-                            test_steps_tr.append(
-                                html.td(test_step_main_div, class_="tr_step_name")
-                            )
-                            test_steps_tr.append(
-                                html.td(raw(user_id), class_="tr_step_user_id")
-                            )
-                            test_steps_tr.append(
-                                html.td(raw(status_code), class_="tr_step_status_code")
+                            # Create request headers main div
+                            request_headers_main_div = self._create_request_headers_divs(
+                                request_headers=request_headers
                             )
 
+                            # Create test steps table row
+                            test_steps_tr = self._create_test_steps_tr(
+                                test_step_main_div=test_step_main_div,
+                                user_id=user_id,
+                                status_code=status_code,
+                                request_headers_main_div=request_headers_main_div
+                            )
+
+                            # Append table row to table body
                             test_steps_tbody.append(test_steps_tr)
 
-                            # run_content_div.append(test_step_main_div)
-
+                    # Append test steps table to run div
                     run_content_div.append(test_steps_table)
-
-                    run_main_div.append(run_label_div)
-                    run_main_div.append(run_content_div)
 
                     log.append(run_main_div)
 
@@ -526,7 +583,7 @@ class HTMLReport(object):
 
             def generate_checkbox(self):
                 checkbox_kwargs = {'data-test-result':
-                                   self.test_result.lower()}
+                                       self.test_result.lower()}
                 if self.total == 0:
                     checkbox_kwargs['disabled'] = 'true'
 
@@ -581,10 +638,10 @@ class HTMLReport(object):
             html.tr(cells),
             html.tr([
                 html.th('No results found. Try to check the filters',
-                    colspan=len(cells))],
-                    id='not-found-message', hidden='true'),
+                        colspan=len(cells))],
+                id='not-found-message', hidden='true'),
             id='results-table-head'),
-                self.test_logs], id='results-table')]
+            self.test_logs], id='results-table')]
 
         main_js = pkg_resources.resource_string(
             __name__, os.path.join('resources', 'main.js'))
