@@ -231,6 +231,7 @@ class HTMLReport(object):
                 separator = line.startswith('_ ' * 10)
                 if separator:
                     div.append(line[:80])
+                    div.append(html.br())
                 else:
                     exception = line.startswith("E   ")
                     if exception:
@@ -238,7 +239,7 @@ class HTMLReport(object):
                         div.append(html.br())
                     else:
                         div.append(raw(escape(line)))
-                        div.append(html.br())
+                div.append(html.br())
 
         def _append_run_error(self, div, run_error):
             run_error_div = html.div(class_="run_error")
@@ -419,6 +420,29 @@ class HTMLReport(object):
 
             return test_debug_logs_main_div
 
+        def _create_be_stack_trace_divs(self, be_stack_trace):
+            # Create be stack trace main div
+            be_stack_trace_main_div = html.div(
+                class_="be_stack_trace_main"
+            )
+            # Create be stack trace show/hide div
+            be_stack_trace_label_div = html.div(
+                "Backend stack trace",
+                html.span(" (show/hide)", class_="hint"),
+                class_="be_stack_trace_label"
+            )
+            # Create be stack trace content div
+            be_stack_trace_content_div = html.div(
+                raw(be_stack_trace),
+                class_="be_stack_trace_content",
+                style="display:none"
+            )
+
+            be_stack_trace_main_div.append(be_stack_trace_label_div)
+            be_stack_trace_main_div.append(be_stack_trace_content_div)
+
+            return be_stack_trace_main_div
+
         def _get_and_format_step_logs(self, test_step):
             re_search = re.search(
                 "<beginning_of_step_name>(.*)<end_of_step_name>"
@@ -447,6 +471,16 @@ class HTMLReport(object):
             if re_search:
                 test_debug_logs = re_search.group(1)
                 return test_debug_logs
+
+        def _get_and_format_be_stack_trace(self, test_logs):
+            re_search = re.search(
+                "<beginning_of_be_stack_trace>(.*)<end_of_be_stack_trace>",
+                test_logs,
+                flags=re.S
+            )
+            if re_search:
+                be_stack_trace = re_search.group(1)
+                return be_stack_trace
 
         def append_log_html(self, report, additional_html):
             """
@@ -479,6 +513,16 @@ class HTMLReport(object):
                         if "stderr" in header:
                             continue
 
+                        # Get backend stack trace and add to ttest steps tbody if
+                        # backend stack trace is present
+                        be_stack_trace = self._get_and_format_be_stack_trace(
+                            test_logs=section[1]
+                        )
+                        if be_stack_trace:
+                            be_stack_trace_main_div = self._create_be_stack_trace_divs(
+                                be_stack_trace=be_stack_trace
+                            )
+                            run_content_div.append(be_stack_trace_main_div)
                         # Get test debug logs and add to test steps tbody if
                         # any test debug logs are present
                         test_debug_logs = self._get_and_format_test_debug_logs(

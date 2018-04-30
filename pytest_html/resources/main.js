@@ -131,6 +131,9 @@ function run_show_hide() {
     },{
         tab: 'test_debug_logs_label',
         body: 'test_debug_logs_content'
+    },{
+        tab: 'be_stack_trace_label',
+        body: 'be_stack_trace_content'
     }]);
 
     function run(classList) {
