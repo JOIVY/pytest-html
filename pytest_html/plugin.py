@@ -272,7 +272,6 @@ class HTMLReport(object):
             test_steps_table.append(
                 html.th(
                     "Action name",
-                    html.span(" (click action to expand/collapse)", class_="hint"),
                     class_="step_name"
                 )
             )
@@ -303,7 +302,7 @@ class HTMLReport(object):
                     run=run,
                     pass_or_fail="failed" if run_error else "passed"
                 ),
-                html.span(" (show/hide details)", class_="hint"),
+                html.span(" (show/hide)", class_="hint"),
                 class_="run_label",
                 count=run
             )
@@ -339,6 +338,7 @@ class HTMLReport(object):
             # Create test step show/hide div
             test_step_label_div = html.div(
                 step_name,
+                html.span(" (show/hide)", class_="hint"),
                 class_="test_step_label",
                 name=step_name
             )
@@ -396,6 +396,29 @@ class HTMLReport(object):
 
             return test_steps_tr
 
+        def _create_test_debug_logs_divs(self, test_debug_logs):
+            # Create test debug logs main div
+            test_debug_logs_main_div = html.div(
+                class_="test_debug_logs_main"
+            )
+            # Create test debug logs show/hide div
+            test_debug_logs_label_div = html.div(
+                "Test debug logs",
+                html.span(" (show/hide)", class_="hint"),
+                class_="test_debug_logs_label"
+            )
+            # Create test debug logs content div
+            test_debug_logs_content_div = html.div(
+                raw(test_debug_logs),
+                class_="test_debug_logs_content",
+                style="display:none"
+            )
+
+            test_debug_logs_main_div.append(test_debug_logs_label_div)
+            test_debug_logs_main_div.append(test_debug_logs_content_div)
+
+            return test_debug_logs_main_div
+
         def _get_and_format_step_logs(self, test_step):
             re_search = re.search(
                 "<beginning_of_step_name>(.*)<end_of_step_name>"
@@ -414,6 +437,16 @@ class HTMLReport(object):
             request_headers = re_search.group(4)
 
             return step_name, user_id, status_code, request_headers, step_log
+
+        def _get_and_format_test_debug_logs(self, test_logs):
+            re_search = re.search(
+                "<beginning_of_test_debug>(.*)<end_of_test_debug>",
+                test_logs,
+                flags=re.S
+            )
+            if re_search:
+                test_debug_logs = re_search.group(1)
+                return test_debug_logs
 
         def append_log_html(self, report, additional_html):
             """
@@ -445,6 +478,17 @@ class HTMLReport(object):
                         # run_div.append(html.br())
                         if "stderr" in header:
                             continue
+
+                        # Get test debug logs and add to test steps tbody if
+                        # any test debug logs are present
+                        test_debug_logs = self._get_and_format_test_debug_logs(
+                            test_logs=section[1]
+                        )
+                        if test_debug_logs:
+                            test_debug_logs_main_div = self._create_test_debug_logs_divs(
+                                test_debug_logs=test_debug_logs
+                            )
+                            run_content_div.append(test_debug_logs_main_div)
 
                         # Separate test steps and format test steps
                         # (remove random /n, /s etc. chars)

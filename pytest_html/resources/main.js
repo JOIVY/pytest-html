@@ -128,6 +128,9 @@ function run_show_hide() {
     },{
         tab: 'request_headers_label',
         body: 'request_headers_content'
+    },{
+        tab: 'test_debug_logs_label',
+        body: 'test_debug_logs_content'
     }]);
 
     function run(classList) {

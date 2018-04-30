@@ -115,7 +115,7 @@ span.error, span.failed, span.xpassed, .error .col-result, .failed .col-result, 
 .test_step_content {
     width: 1200px;
 }
-.test_step_content, .request_headers_content{
+.test_step_content, .request_headers_content, .test_debug_logs_content {
     font-size: 0.8rem;
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -166,6 +166,14 @@ span.error, span.failed, span.xpassed, .error .col-result, .failed .col-result, 
     font-weight: normal;
     color: #8e8e8e;
     font-size: 0.8rem;
+}
+.test_debug_logs_main {
+    margin-top: 15px;
+    font-size: 1rem;
+    background-color: #ececec;
+    padding: 5px;
+    width: 2190px;
+    border: solid 1px #a2a2a2;
 }
 div.image {
 	border: 1px solid #e6e6e6;
