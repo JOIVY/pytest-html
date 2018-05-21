@@ -410,7 +410,7 @@ class HTMLReport(object):
             )
             # Create test debug logs content div
             test_debug_logs_content_div = html.div(
-                raw(test_debug_logs),
+                test_debug_logs,
                 class_="test_debug_logs_content",
                 style="display:none"
             )
@@ -463,14 +463,13 @@ class HTMLReport(object):
             return step_name, user_id, status_code, request_headers, step_log
 
         def _get_and_format_test_debug_logs(self, test_logs):
-            re_search = re.search(
-                "<beginning_of_test_debug>(.*)<end_of_test_debug>",
+            all_matches = re.findall(
+                "<beginning_of_test_debug>(.*?)<end_of_test_debug>",
                 test_logs,
                 flags=re.S
             )
-            if re_search:
-                test_debug_logs = re_search.group(1)
-                return test_debug_logs
+            if all_matches:
+                return "\n\n".join(all_matches)
 
         def _get_and_format_be_stack_trace(self, test_logs):
             re_search = re.search(
